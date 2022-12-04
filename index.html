@@ -1,1 +1,350 @@
-Hello World
+<!DOCTYPE HTML>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <title>Ishaan Preetam Chandratreya</title>
+  
+  <meta name="author" content="Ishaan Preetam Chandratreya">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="stylesheet" type="text/css" href="stylesheet.css">
+  <link rel="icon" type="image/png" href="images/seal_icon.png">
+</head>
+
+<body>
+  <table style="width:100%;max-width:800px;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+    <tr style="padding:0px">
+      <td style="padding:0px">
+        <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+          <tr style="padding:0px">
+            <td style="padding:2.5%;width:63%;vertical-align:middle">
+              <p style="text-align:center">
+                <name>Ishaan Preetam Chandratreya</name>
+              </p>
+              <p>I am a research associate (Staff Associate 1) at <a href="https://www.cs.columbia.edu/">Columbia University</a>. Previously, I graduated from Columbia's Fu Foundation Engineering school with a B.S in Computer Science (<em> magna cum laude </em>), focusing on intelligent systems for computer vision and robotics.
+                  I am broadly interested in 3D representation learning in open world scenes, and it's application in perception and planning in downstream tasks (eg. embodied AI, robotics, self-driving).
+              </p>
+
+              <p>My current research focuses on how we can predict object motion better in 3D physical worlds. This ability to predict forward makes possible many exciting applications in interacting with moving objects, and designing and controlling shapes under physical constraints. Previously, I focused on
+              solving some high level vision problems that are natural in complex real-world scenes using vision-and-language.</p>
+              <p>
+
+              </p>
+
+              <strong>Note: </strong> If you are here to evaluate my graduate school application, all the <i> in submission </i> papers listed below have been attached to my application through uploaded/additional materials. They are also attached to my CV.
+
+              <p style="text-align:center">
+                <a href="mailto:ipc2107@columbia.edu">Email</a> /
+
+                <a href="https://github.com/ishaanchandratreya/">Github</a>
+              </p>
+            </td>
+            <td style="padding:2.5%;width:40%;max-width:40%">
+              <a href="images/profile_final.png"><img style="width:100%;max-width:100%" alt="profile photo" src="images/profile_final.png" class="hoverZoomLink"></a>
+            </td>
+          </tr>
+        </tbody></table>
+        <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+            <tr>
+            <td style="padding:20px;width:100%;vertical-align:middle">
+              <heading>Research</heading>
+              <p>
+                I am fortunate to be advised by <a href="https://www.cs.columbia.edu/~vondrick/">Prof. Carl Vondrick</a> and have worked with an inspiring group of collaborators as part of CV Lab, Columbia. I have also
+                  been fortunate to work on projects co-advised with <a href="http://www.cs.columbia.edu/~zemel/"> Prof. Richard Zemel </a>, <a href="https://www.cs.columbia.edu/~shurans/"> Prof. Shuran Song</a>, and <a href="https://www.cis.upenn.edu/~danroth/">Prof. Dan Roth</a>. I was previously advised by <a href="https://www.creativemachineslab.com/">Prof. Hod Lipson</a>.
+              </p>
+
+            </td>
+          </tr>
+        </tbody></table>
+        <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/fig_chaos.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+            <papertitle>Motion Prediction For Chaotic Scenes in a Physical World</papertitle>
+          <br>
+          <strong>Ishaan Chandratreya</strong>,
+          <a>Huy Ha</a>,
+          <a>Simon Stent </a>,
+          <a>Pavel Tokmakov</a>,
+          <a>Shuran Song</a>,
+          <a>Carl Vondrick</a>
+          <br>
+    <em>In Submission </em>
+          <br>
+          <a>arXiv coming soon!</a>
+          <p></p>
+          <p>    Object trajectories in a physical world often have chaotic properties as a result of the stochastic nature of the environment. Modeling the dynamics of even simple objects in such worlds is challenging because while parts of the motion (e.g.~during free fall, motion at low velocities) are still highly predictable, the trajectories may have bifurcation points (e.g.~during contact) which make the motion unpredictable very quickly. We introduce a model for predicting the motion of a rigid, dynamic object in static environments that endow these properties of the physical world. By using a simple but effective architecture that conditions on point clouds of the scene, we show that it is possible to learn a 3D model for contact that generalizes across environments. We further show that our model is actionable and can be used for a downstream application of predictive models in uncertain environments: robotic planning for moving objects.  </p>
+        </td>
+      </tr>
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/fig_fluids.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+            <papertitle>Learning Fluid Simulation for Any Surface</papertitle>
+          <br>
+          <a> Arjun Mani* </a>
+          <strong>Ishaan Chandratreya*</strong>,
+          <a>Elliot Creager</a>,
+          <a>Carl Vondrick</a>,
+          <a>Richard Zemel</a>
+          <br>
+    <em>In Submission </em>
+          <br>
+          <a>arXiv coming soon!</a>
+          <p></p>
+          <p>Accurate simulation of fluids to design 3D objects, tools, and structures is a vital tool across engineering applications. Recently, graph neural networks have been employed to learn fast and differentiable fluid simulators, suitable for solving inverse problems using gradient-based optimization. In order for this optimization to be useful in design contexts, however, learned simulators must be capable of accurately modeling how fluids interact with genuinely novel objects, not seen during training. To promote this type of generalization, we introduce a framework that represents objects <i> implicitly </i> using signed distance functions (SDFs), rather than the usual explicit representation as a collection of meshes or particles.</p>
+        </td>
+      </tr>
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/fig_task_bias.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+            <papertitle>The Risks of Versatile Models: Resolving Task Bias for Vision-Language Models</papertitle>
+          <br>
+          <a> Sachit Menon* </a>,
+          <strong>Ishaan Chandratreya*</strong>,
+          <a>Carl Vondrick</a>,
+          <br>
+    <em>In Submission </em>
+          <br>
+          <a>arXiv coming soon!</a>
+          <p></p>
+          <p>We conduct an in-depth exploration of the CLIP model, and find that the representation produced for a given image tends to be strongly biased towards features for a particular task over others, primarily containing information selectively relevant to that task. Moreover, which task a particular image will be biased towards is unpredictable, with little consistency across images; for instance, strongly preferring text features when an image has small watermark text, object features when there is no prominent object, and more. We call this tendency <i> task bias </i>, and construct a dataset of images where each image has labels for multiple semantic recognition tasks to evaluate its prevalence. To resolve this task bias, we aim to provide tools that allow a user to guide the representation towards features relevant to their task of interest.</p>
+        </td>
+      </tr>
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/fig_time_reasoning.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://arxiv.org/abs/2203.00758">
+            <papertitle>There is a Time and Place for Reasoning Beyond the Image</papertitle>
+          </a>
+          <br>
+          <a>Xingyu Fu</a>,
+          <a>Ben Zhou*</a>,
+          <strong>Ishaan Chandratreya*</strong>,
+          <a>Carl Vondrick</a>,
+          <a>Dan Roth</a>
+          <br>
+    <em>ACL</em> 2022 (Oral)
+          <br>
+          <a href="https://arxiv.org/abs/2203.00758">arXiv</a>
+          / <a href="https://github.com/zeyofu/TARA">Code+Models</a>
+          <p></p>
+          <p> In this work, we formulate this problem and introduce TARA: a dataset with 16k images with their associated news, time and location automatically extracted from New York Times (NYT), and an additional 61k examples as distant supervision from WIT. We show that there exists a 70% gap between a state-of-the-art joint model and human performance, which is slightly filled by our proposed model that uses segment-wise reasoning, motivating higher-level vision-language joint models that can conduct open-ended reasoning with world knowledge.</p>
+        </td>
+      </tr>
+
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/neural_state_variables.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://www.cs.columbia.edu/~bchen/neural-state-variables/">
+            <papertitle>Automated Discovery of Fundamental Variables Hidden in Experimental Data</papertitle>
+          </a>
+          <br>
+          <a>Boyuan Chen</a>,
+          <a>Kuang Huang</a>,
+          <a>Sunand Raghupathi</a>,
+          <strong>Ishaan Chandratreya</strong>,
+          <a>Qiang Du</a>,
+          <a>Hod Lipson</a>
+          <br>
+    <em>Nature Computational Science</em>
+          <br>
+          <a href="https://www.cs.columbia.edu/~bchen/neural-state-variables/">Project Page</a>
+    /
+          <a href="https://arxiv.org/abs/2112.10755">arXiv</a>
+    /
+          <a href="https://www.youtube.com/watch?v=KWHXchlJzSw&ab_channel=BoyuanChen">Video</a>
+    /
+          <a href="https://github.com/BoyuanChen/neural-state-variables">Code+Models</a>
+
+          <p></p>
+          <p>Most data-driven methods for modeling physical phenomena still assume that observed data streams already correspond to relevant state variables. A key challenge is to identify the possible sets of state variables from scratch, given only high-dimensional observational data. Here we propose a new principle for determining how many state variables an observed system is likely to have.</p>
+        </td>
+      </tr>
+
+
+
+        </tbody></table>
+
+              <strong> * indicates equal contribution </strong>
+
+				
+        <table width="100%" align="center" border="0" cellspacing="0" cellpadding="20"><tbody>
+          <tr>
+            <td>
+              <heading>Projects</heading>
+                        <p>At Columbia, I've completed some further explorative projects, either independantly or as part of a course. You can find some of my key projects here.
+        </p>
+            </td>
+          </tr>
+        </tbody></table>
+        <table width="100%" align="center" border="0" cellpadding="20"><tbody>
+
+        <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/fig_phyre.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://github.com/ishaanchandratreya/phyre-fwd">
+            <papertitle>A Gym API for PHYRE: Physical Reasoning and World Models</papertitle>
+          </a>
+          <br>
+          <strong>Ishaan Chandratreya</strong>
+          <br>
+    <em>Independent Project </em>, Summer 2021
+          <br>
+          <a href="https://github.com/ishaanchandratreya/phyre-fwd">Code</a>
+          <p></p>
+          <p>PHYRE is a benchmark for physical reasoning which involves placing a single object inside an 2D scene to achieve some goal. As such, an action in PHYRE is taken only at the beginning.
+          We extend PHYRE to a continuous-control setting, and introduce a Gym interface for it. We then test the success of several "world models"
+          in building representations of the dynamics inside PHYRE scenes. </p>
+        </td>
+  </tr>
+
+
+
+    <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/ss.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="data/ss_final.pdf">
+            <papertitle>Exploring Test Time Optimization for Discrete Neural Representation Learners</papertitle>
+          </a>
+          <br>
+          <strong>Ishaan Chandratreya</strong>,
+          <a>Max Helman</a>,
+          <a>Raghav Mecheri</a>
+          <br>
+    <em>Self Supervised Learning </em>, Spring 2022 (Prof. Richard Zemel)
+          <br>
+          <a href="data/ss_final.pdf">Report</a>
+          <p></p>
+          <p>Many methods seek to better understand the latent space of image synthesis models (eg. VAEs, GANs) in order to dissect the
+              generative process and to enable easy latent space search: the task of navigating the
+              latent space of the models such that the image produced by it follows some pre-conceived notion. It is not obvious how to carry search methods
+              for continuous latent spaces over to autoencoders that have discrete latent spaces.
+              In this paper, we provide empirical analysis of the latent space of Vector Quantized Variational Autoencoders (VQVAE),
+              and propose a framework to extend continuous distribution search to the latent space of discrete models.</p>
+        </td>
+  </tr>
+					
+  <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/repro.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="data/poster_uml.pdf">
+            <papertitle>How much do Label Representations Matter for Image Classification?</papertitle>
+          </a>
+          <br>
+          <strong>Ishaan Chandratreya</strong>,
+          <a>Katon Luaces</a>
+          <br>
+    <em>Unsupervised Machine Learning </em>, Fall 2021 (Prof. Nakul Verma)
+          <br>
+          <a href="data/poster_uml.pdf">Poster</a>
+          <p></p>
+          <p>We investigate how using a range of unsupervised methods for organizing the space in which the representations of the label reside affects the performance and training dynamics of a supervised
+          image classification task. We present a range of possibilities to learn a "label" space prior to image classification, including imposing ordinal constraints
+          and geometric inductive biases.</p>
+        </td>
+  </tr>
+
+  <tr onmouseout="refnerf_stop()" onmouseover="refnerf_start()">
+      <td style="padding:20px;width:25%;vertical-align:middle">
+        <div class="one">
+          <img src='images/ieor_image.png' width="160">
+        </div>
+      </td>
+            <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="data/ipc2107_final_report.pdf">
+            <papertitle> Learning to Cut with Reinforcement Learning </papertitle>
+          </a>
+          <br>
+          <strong>Ishaan Chandratreya</strong>
+          <br>
+    <em>Reinforcement Learning: Theory and Applications </em>, Spring 2021 (Prof. Shipra Agrawal)
+          <br>
+          <a href="data/ipc2107_final_report.pdf">Report</a>
+          <p></p>
+          <p>The issue of selecting cuts as part of cutting-plane methods to solve integer programming (IP) problems can be framed as a Markov Decision Process, and hence the policy to select these cuts can be learnt using policy gradient methods.</p>
+        </td>
+      </tr>
+					
+        </tbody></table>
+
+
+
+        <table width="100%" align="center" border="0" cellspacing="0" cellpadding="20"><tbody>
+          <tr>
+            <td>
+              <heading>Teaching</heading>
+
+                <p>At Columbia, I've helped assist with instructing classes covering various theoretical and applied matters in building intelligent systems. I am fortunate to have <a href="http://www.cs.columbia.edu/~verma/"> Prof. Nakul Verma</a> as my guide here.
+        </p>
+            </td>
+          </tr>
+        </tbody></table>
+        <table width="100%" align="center" border="0" cellpadding="20"><tbody>
+
+          <tr>
+            <td width="75%" valign="center">
+              <p>Head Instructional Assistant: COMS 4771 Machine Learning (Spring 2021, Fall 2021, Spring 2022)</p>
+              <p>Head Instructional Assistant: COMS 3251 Computational Linear Algebra (Summer 2021)</p>
+              <p>Teaching Assistant: COMS 4732 Computer Vision (Learning) (Summer 2021) </p>
+              <p>Teaching Assistant: COMS 3137 Honors Data Structures (Spring 2020)</p>
+              <p>Teaching Assistant: COMS 3134 Data Structure (Fall 2019)</p>
+            </td>
+          </tr>
+
+        </tbody></table>
+
+
+        <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+          <tr>
+            <td style="padding:0px">
+              <br>
+              <p style="text-align:right;font-size:8px;">
+                Credits to <a style="font-size: 8px" href="https://jonbarron.info/">Jon Barron</a> for the website template.
+                <br>
+              </p>
+            </td>
+          </tr>
+        </tbody></table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>
