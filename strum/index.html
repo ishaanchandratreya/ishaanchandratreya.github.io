@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendulum — strumming trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — edit these to restyle the whole page
+   ============================================================ */
+:root{
+  --ink:#0c1315; --panel:#111c1e; --panel-2:#16262a; --rule:#223438;
+  --bone:#ece6dc; --muted:#7d938f;
+  --brass:#d4a24c;   /* DOWNSTROKE */
+  --mint:#6fd6bd;    /* UPSTROKE */
+  --warn:#e2705c;    /* rushing */
+  --display:"Instrument Serif",Georgia,serif;
+  --body:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --maxw:980px; --r:3px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px 80px}
+
+header{border-bottom:1px solid var(--rule);margin-bottom:26px;padding:34px 0 20px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,6vw,54px);line-height:1;margin:0 0 8px;letter-spacing:-.01em}
+h1 em{font-style:italic;color:var(--brass)}
+.sub{color:var(--muted);max-width:58ch;margin:0;font-size:14px}
+
+section{margin-bottom:32px}
+h2{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+p{margin:0 0 10px}
+.note{color:var(--muted);font-size:13px}
+
+.stage{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px}
+.cuebar{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px;min-height:22px}
+#cueTitle{font-weight:500}
+#cueText{color:var(--muted);font-size:13px}
+#stageTag{font-family:var(--mono);font-size:11px;color:var(--brass);margin-left:auto}
+
+.canvasWrap{position:relative}
+canvas{display:block;width:100%;height:300px;touch-action:none}
+@media(max-width:560px){canvas{height:260px}}
+#freeze{
+  position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;
+  background:rgba(12,19,21,.94);border:1px solid var(--brass);border-radius:var(--r);text-align:center;padding:18px;
+}
+#freeze.on{display:flex}
+#freeze .big{font-family:var(--display);font-size:40px;color:var(--brass);line-height:1}
+#freeze .ans{font-family:var(--mono);font-size:14px;margin-top:10px;max-width:36ch}
+#freeze .cd{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:12px}
+
+.transport{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--rule)}
+button{font-family:var(--body);font-size:14px;background:var(--panel-2);color:var(--bone);border:1px solid var(--rule);border-radius:var(--r);padding:8px 14px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+#play{background:var(--brass);color:#10191b;border-color:var(--brass);font-weight:700;min-width:108px}
+#play[data-on="1"]{background:transparent;color:var(--brass)}
+.tempo{display:flex;align-items:center;gap:10px;flex:1;min-width:230px}
+#bpmOut{font-family:var(--mono);font-size:20px;min-width:3.4em;color:var(--brass)}
+input[type=range]{flex:1;accent-color:var(--brass);min-width:110px}
+.opts{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:12px}
+label.chk{display:flex;gap:7px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+input[type=checkbox]{accent-color:var(--mint);width:15px;height:15px}
+select{font-family:var(--body);font-size:13px;background:var(--panel-2);color:var(--bone);border:1px solid var(--rule);border-radius:var(--r);padding:6px 8px}
+
+.grid{display:grid;grid-template-columns:repeat(var(--cells,8),minmax(0,1fr));gap:5px;margin-top:14px}
+.grid[data-div="16"]{gap:3px}
+.grid[data-div="16"] .cell{padding:7px 0 6px}
+.grid[data-div="16"] .cell .arw,.grid[data-div="12"] .cell .arw{font-size:17px}
+.grid[data-div="16"] .cell .cnt,.grid[data-div="12"] .cell .cnt{font-size:11px}
+.grid:not([data-div="8"]) .cell[data-hit="0"]::after{content:"·";font-size:13px;bottom:0;line-height:1}
+.cell[data-beatstart="1"]{box-shadow:inset 2px 0 0 var(--rule)}
+@media(max-width:560px){.grid[data-div="16"]{gap:2px}.grid[data-div="16"] .cell .arw{font-size:13px}}
+.grid[data-locked="1"] .cell{cursor:default;opacity:.92}
+.cell{background:var(--panel-2);border:1px solid var(--rule);border-radius:var(--r);padding:9px 2px 7px;text-align:center;cursor:pointer;font-family:var(--mono);position:relative}
+.cell .cnt{display:block;font-size:12px;color:var(--muted)}
+.cell .arw{display:block;font-size:21px;line-height:1.15;color:var(--muted)}
+.cell[data-hit="1"][data-dir="d"] .arw{color:var(--brass)}
+.cell[data-hit="1"][data-dir="u"] .arw{color:var(--mint)}
+.cell[data-hit="0"] .arw{opacity:.3}
+.cell[data-hit="0"]::after{content:"ghost";position:absolute;left:0;right:0;bottom:2px;font-size:8px;letter-spacing:.1em;color:var(--muted);opacity:.65}
+.cell[data-on="1"]{background:#1e3236}
+.grid[data-emph="1"] .cell[data-hit="0"]{border-color:var(--warn)}
+.grid[data-emph="1"] .cell[data-hit="0"]::after{content:"say it";color:var(--warn);opacity:1}
+.gridhint{font-size:12px;color:var(--muted);margin-top:8px}
+
+.drills{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:9px}
+.drill{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:11px 12px;text-align:left;display:block;width:100%}
+.drill:hover{border-color:var(--brass)}
+.drill .n{font-family:var(--mono);font-size:11px;color:var(--brass);display:flex;gap:8px;align-items:center}
+.drill .kbd{border:1px solid var(--rule);border-radius:2px;padding:0 5px;color:var(--bone)}
+.drill .t{display:block;font-weight:500;margin:3px 0 3px}
+.drill .w{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.tier{font-family:var(--mono);font-size:11px;color:var(--muted);margin:18px 0 8px;letter-spacing:.08em}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+#tapPad{width:100%;padding:22px;font-family:var(--mono);font-size:14px;border-style:dashed;color:var(--muted)}
+#tapPad:active{background:#1e3236}
+.bars{margin-top:12px;font-family:var(--mono);font-size:12px}
+.bar{display:grid;grid-template-columns:52px 1fr 46px;gap:8px;align-items:center;margin-bottom:4px}
+.track{position:relative;height:15px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.track i{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--muted);opacity:.8}
+.track b{position:absolute;top:2px;bottom:2px;border-radius:1px}
+.verdict{margin-top:12px;font-size:13px;padding:10px;border:1px solid var(--rule);border-radius:var(--r);background:var(--panel)}
+.verdict strong{font-family:var(--mono)}
+
+#mirrorWrap{display:none;position:relative;margin-top:12px;background:#000;border-radius:var(--r);overflow:hidden}
+#mirrorWrap.on{display:block}
+video{display:block;width:100%;transform:scaleX(-1)}
+.guide{position:absolute;left:0;right:0;height:1px;background:var(--brass);opacity:.75}
+.guide.top{top:30%} .guide.bot{top:70%;background:var(--mint)}
+
+ol.routine{margin:0;padding-left:20px}
+ol.routine li{margin-bottom:7px}
+ol.routine b{font-family:var(--mono);font-size:12px;color:var(--brass);font-weight:400}
+footer{border-top:1px solid var(--rule);padding-top:16px;color:var(--muted);font-size:12px}
+kbd{font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--rule);border-radius:2px;padding:1px 5px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The hand is a <em>pendulum</em></h1>
+  <p class="sub">The hand is at the strings on every count and at full extension between counts — a stroke passes a couple of centimetres beyond the outer strings, no further. Ghost strokes still travel. Three strokes in a row are three placed events, not one burst.</p>
+</header>
+
+<section>
+  <h2>Trainer</h2>
+  <div class="stage">
+    <div class="cuebar">
+      <span id="cueTitle">Free play</span>
+      <span id="cueText">Pick a drill below, or press its key.</span>
+      <span id="stageTag"></span>
+    </div>
+
+    <div class="canvasWrap">
+      <canvas id="pend" aria-label="Animated strumming pendulum"></canvas>
+      <div id="freeze" role="status" aria-live="polite">
+        <div class="big">STOP</div>
+        <div class="ans" id="freezeAns"></div>
+        <div class="cd" id="freezeCd"></div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <p class="gridhint">Switch the subdivision below to build 16th or triplet patterns. Tap a cell to switch it between <span style="color:var(--bone)">hit</span> and <span style="color:var(--bone)">ghost</span>. Ghosts are silent — your hand still swings through them.</p>
+
+    <div class="transport">
+      <button id="play" data-on="0">Start</button>
+      <div class="tempo">
+        <span id="bpmOut">70</span>
+        <input type="range" id="bpm" min="40" max="140" value="70" step="1" aria-label="Tempo in beats per minute">
+      </div>
+    </div>
+
+    <div class="opts">
+      <label class="chk" for="division">Subdivision</label>
+      <select id="division">
+        <option value="8" selected>8ths &mdash; 1 &amp; 2 &amp;</option>
+        <option value="16">16ths &mdash; 1 e &amp; a</option>
+        <option value="12">triplets &mdash; 1 trip let</option>
+      </select>
+      <label class="chk" for="clickMode">Click on</label>
+      <select id="clickMode">
+        <option value="all8">every 8th note</option>
+        <option value="beats" selected>the 4 beats</option>
+        <option value="24">2 and 4 only</option>
+        <option value="off">the &amp;s only</option>
+        <option value="burst">the UDU only</option>
+        <option value="one">beat 1 only</option>
+        <option value="drop">2 bars on, 2 bars off</option>
+        <option value="none">nothing</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="strokeSnd"> Play the pattern back</label>
+      <label class="chk"><input type="checkbox" id="ghostSnd"> Ghosts audible</label>
+      <label class="chk"><input type="checkbox" id="countIn" checked> Count in</label>
+      <label class="chk"><input type="checkbox" id="mirror"> Mirror my hand</label>
+    </div>
+
+    <div id="mirrorWrap">
+      <video id="cam" playsinline muted></video>
+      <div class="guide top"></div><div class="guide bot"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Drills — click one, or press its key</h2>
+  <div id="drillHost"></div>
+</section>
+
+<section class="cols">
+  <div>
+    <h2>Compression test</h2>
+    <p class="note">With the trainer running, hit <kbd>space</kbd> or the pad on every stroke you play. Each bar is the gap between two strokes as a percentage of what it should be. Short and left = rushing.</p>
+    <button id="tapPad">tap here or press space</button>
+    <div class="bars" id="bars"></div>
+    <div class="verdict" id="verdict">No taps yet.</div>
+    <button id="clearTaps" style="margin-top:10px">Clear taps</button>
+  </div>
+  <div>
+    <h2>Tonight's hour</h2>
+    <ol class="routine">
+      <li><b>20 min</b> Keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> — the pendulum itself. Equal arc, equal weight.</li>
+      <li><b>10 min</b> Key <kbd>6</kbd>, the ladder. It advances on its own; don't stop the arm.</li>
+      <li><b>15 min</b> Keys <kbd>9</kbd> then <kbd>q</kbd> — the burst, three clicks for three strokes.</li>
+      <li><b>10 min</b> Key <kbd>e</kbd> with tape marks on the guitar. Compression test running.</li>
+      <li><b>5 min</b> Key <kbd>4</kbd>, freeze test. Then film one take for your coach.</li>
+    </ol>
+    <p class="note" style="margin-top:12px">Stop early if it gets sloppy. Slow and correct beats long and vague.</p>
+  </div>
+</section>
+
+<footer>Brass is a downstroke, mint is an upstroke. All colors and sizes are variables at the top of the file.</footer>
+</div>
+
+<script>
+/* ENGINE:START — pure logic, no DOM and no audio. Unit-tested in test/. */
+var ENGINE = (function(){
+  var COUNTS=["1","&","2","&","3","&","4","&"];
+  var P_ALL=[1,1,1,1,1,1,1,1], P_NONE=[0,0,0,0,0,0,0,0], P_FULL=[1,0,1,1,0,1,1,1];
+  var CLICK_MODES=["all8","beats","24","off","burst","one","drop","none"];
+
+  /* Subdivisions. The pendulum is unchanged: contact still happens at every whole
+     subdivision and full extension halfway between. Only the duration of one
+     subdivision, and how many fit in a bar, differ.
+     Note the triplet case: with an odd number of strokes per beat, strict
+     alternation means beat 2 begins on an UPstroke. That is not a bug, it is what
+     a continuously swinging hand actually does, and it realigns every two beats. */
+  var DIVISIONS={
+    "8": {id:"8", perBeat:2, cells:8,  label:"8ths",
+          counts:["1","&","2","&","3","&","4","&"]},
+    "16":{id:"16",perBeat:4, cells:16, label:"16ths",
+          counts:["1","e","&","a","2","e","&","a","3","e","&","a","4","e","&","a"]},
+    "12":{id:"12",perBeat:3, cells:12, label:"triplets",
+          counts:["1","t","l","2","t","l","3","t","l","4","t","l"]}
+  };
+  function divisionOf(id){ return DIVISIONS[String(id||8)]||DIVISIONS["8"]; }
+  function divOf(d){ return divisionOf(d&&d.div); }
+  function subDur(bpm,div){ return 60/bpm/divisionOf(div).perBeat; }
+  function eighthDur(bpm){ return 30/bpm; }
+  function defaultPattern(div){
+    if(String(div||8)==="8") return P_FULL.slice();
+    var n=divisionOf(div).cells,p=[],i;
+    for(i=0;i<n;i++) p.push(1);
+    return p;
+  }
+  function dirOf(i){ return (i%2===0)?"d":"u"; }
+  function theta(e,tmax){ return tmax*Math.sin(Math.PI*e); }
+  function goingDown(e){ return Math.cos(Math.PI*e)>0; }
+  function contactIndex(e){ return Math.floor(e+1e-9); }
+  function handSide(e){
+    var s=Math.sin(Math.PI*e);
+    if(Math.abs(s)<1e-9) return "at";
+    return s>0?"below":"above";
+  }
+  function wantsClick(mode,i,bar,div){
+    var D=divisionOf(div), pb=D.perBeat;
+    switch(mode){
+      case "all8":  return true;
+      case "beats": return i%pb===0;
+      case "24":    return i===pb||i===pb*3;
+      /* the upbeat: the midpoint of the beat where one exists, else the middle stroke */
+      case "off":   return pb%2===0 ? (i%pb===pb/2) : (i%pb===1);
+      /* the closing three strokes of the bar, which in 8ths is the UDU */
+      case "burst": return i>=D.cells-3;
+      case "one":   return i===0;
+      case "drop":  return (bar%4)<2 && i%pb===0;
+      default:      return false;   /* "none" and anything unknown */
+    }
+  }
+  function bpmAtBar(bar,d){
+    if(!d.ramp||bar<0) return d.bpm;
+    var steps=Math.floor(bar/d.ramp.every);
+    return Math.min(d.ramp.max, d.bpm+steps*d.ramp.delta);
+  }
+  function stageAt(bar,d){
+    if(!d.stages) return {index:0,pattern:d.pattern,label:""};
+    var per=d.barsPerStage||8;
+    var idx=Math.min(d.stages.length-1, Math.max(0, Math.floor(bar/per)));
+    return {index:idx, pattern:d.stages[idx].pattern, label:d.stages[idx].label};
+  }
+  function patternAtBar(bar,d){ return stageAt(bar,d).pattern; }
+
+  /* every sound that should happen at eighth-note position n. n<0 is the count-in. */
+  function eventsForNote(n,d){
+    var out=[], D=divOf(d), cells=D.cells, pb=D.perBeat;
+    if(n<0){ if(n%pb===0) out.push({type:"click",kind:(n===-cells?"accent":"beat")}); return out; }
+    var i=n%cells, bar=Math.floor(n/cells), pat=patternAtBar(bar,d);
+    if(wantsClick(d.click,i,bar,d.div)) out.push({type:"click",kind:(i===0?"accent":(i%pb===0?"beat":"sub"))});
+    if(d.playback||d.ghostAudible){
+      if(pat[i]) out.push({type:"strum",dir:dirOf(i),gain:(d.accentUps&&dirOf(i)==="u")?0.55:0.42});
+      else if(d.ghostAudible) out.push({type:"strum",dir:dirOf(i),gain:0.07});
+    }
+    return out;
+  }
+
+  /* Canvas layout. The arm length is derived from the canvas so that even the
+     widest arc a drill can request still fits. The string block is then drawn
+     at its true size relative to the swing: on a guitar the six strings span
+     about 5cm and a relaxed stroke passes only 2-3cm beyond them, so travel to
+     full extension is a little over one string-block. The block is sized from
+     the REFERENCE arc, not the current one, because widening the arc must make
+     the swing look bigger without making the guitar look smaller. */
+  var MAX_ARC=1.2, REF_ARC=0.62, BOB=12, STRINGS=6, BLOCK_RATIO=0.82;
+  function layout(w,h,tmax){
+    var pad=BOB+14;
+    var L=Math.max(80, Math.min(w-170, (h/2-pad)/Math.sin(MAX_ARC)));
+    var block=L*Math.sin(REF_ARC)*BLOCK_RATIO;
+    return {px:52, py:h/2, L:L, bob:BOB, reach:L*Math.sin(tmax),
+            strings:STRINGS, gap:block/(STRINGS-1), block:block,
+            left:74, right:Math.max(150,w-18)};
+  }
+
+
+  function lcg(seed){ var s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+  function freezeSchedule(seed,count,d){
+    var out=[],k,b=1,r=lcg(seed),cells=divOf(d).cells;
+    if(d.freeze && d.freeze.at==="end"){
+      for(k=0;k<count;k++) out.push((3+k*4)*cells + cells-1 + 0.5);
+      return out;
+    }
+    for(k=0;k<count;k++){
+      b += 2+Math.floor(r()*4);                 /* gap of 2..5 bars */
+      out.push(b*cells + Math.floor(r()*cells) + 0.5);
+    }
+    return out;
+  }
+  function freezeInfo(e,div){
+    var D=divisionOf(div), n=Math.floor(e), i=((n%D.cells)+D.cells)%D.cells, down=(i%2===0);
+    return {
+      count:D.counts[i], dir:dirOf(i), side:(down?"below":"above"),
+      text:'full extension '+(down?"below":"above")+' the strings, just past the '+(down?"down":"up")+'stroke on "'+D.counts[i]+'"'
+    };
+  }
+
+  /* time of note n measured from bar 1 beat 1, so the count-in is negative */
+  function timeOfNote(n,d){
+    var t=0,k,cells=divOf(d).cells;
+    if(n>=0){ for(k=0;k<n;k++) t+=subDur(bpmAtBar(Math.floor(k/cells),d),d.div); }
+    else { for(k=n;k<0;k++) t-=subDur(bpmAtBar(Math.floor(k/cells),d),d.div); }
+    return t;
+  }
+  function simulate(d,bars){
+    var cells=divOf(d).cells, startN=d.countIn?-cells:0, endN=bars*cells, rows=[], n;
+    for(n=startN;n<endN;n++) rows.push({n:n, t:timeOfNote(n,d), events:eventsForNote(n,d)});
+    return rows;
+  }
+
+  function analyze(taps,e8){
+    var rows=[],i,dt,nom;
+    for(i=1;i<taps.length;i++){
+      dt=taps[i]-taps[i-1];
+      nom=Math.max(1,Math.round(dt/e8));
+      rows.push({pct:dt/(nom*e8)*100, nom:nom});
+    }
+    if(rows.length<2) return {rows:rows,early:null,late:null,drift:null,verdict:"more taps"};
+    var half=Math.floor(rows.length/2);
+    var mean=function(a){ return a.reduce(function(s,r){return s+r.pct;},0)/a.length; };
+    var early=mean(rows.slice(0,half)), late=mean(rows.slice(-half)), drift=late-early;
+    return {rows:rows,early:early,late:late,drift:drift,
+            verdict:(drift<-4?"compressing":(drift>4?"slowing":"even"))};
+  }
+
+  function validateDrill(d){
+    var errs=[];
+    if(!d.key||String(d.key).length!==1) errs.push("key");
+    if(!d.title) errs.push("title");
+    if(!d.why) errs.push("why");
+    if(CLICK_MODES.indexOf(d.click)<0) errs.push("click");
+    if(!(d.bpm>=40&&d.bpm<=140)) errs.push("bpm");
+    if(d.div!==undefined && !DIVISIONS[String(d.div)]) errs.push("div");
+    var cells=divOf(d).cells;
+    var pats = d.stages ? d.stages.map(function(s){return s.pattern;}) : [d.pattern];
+    pats.forEach(function(p){
+      if(!Array.isArray(p)||p.length!==cells||p.some(function(v){return v!==0&&v!==1;})) errs.push("pattern");
+    });
+    if(d.stages) d.stages.forEach(function(s){ if(!s.label) errs.push("stageLabel"); });
+    if(d.ramp && !(d.ramp.every>0&&d.ramp.delta>0&&d.ramp.max>=d.bpm)) errs.push("ramp");
+    if(d.arc!==undefined && !(d.arc>=0.3&&d.arc<=1.2)) errs.push("arc");
+    return errs;
+  }
+
+  var TIERS=[
+   {name:"TIER 1 · rebuild the pendulum", items:[
+    {key:"1",bpm:60,click:"all8",pattern:P_NONE,title:"Silent pendulum",
+     why:"No contact at all. Equal travel above and below.",
+     cue:"Hand just off the strings. Match the arc marks exactly."},
+    {key:"2",bpm:60,click:"all8",pattern:P_ALL,title:"Continuous 8ths, muted",
+     why:"Every 8th audible. The up must match the down in weight.",
+     cue:"Left hand mutes. Recorded back, you shouldn't be able to tell ups from downs."},
+    {key:"3",bpm:62,click:"off",pattern:P_ALL,accentUps:true,title:"Accent the upstrokes",
+     why:"Click sits on the &s, so the up becomes an event, not a rebound.",
+     cue:"Every click is an upstroke. Hit those harder than the downs."},
+    {key:"4",bpm:60,click:"beats",pattern:P_ALL,freeze:{mode:"random"},title:"Freeze test",
+     why:"Stops you at random and tells you where the hand should be.",
+     cue:"When it says STOP, freeze instantly and check yourself against the answer."},
+    {key:"5",bpm:55,click:"all8",pattern:P_ALL,title:"Wide rebound",
+     why:"Deliberately overcorrect the abrupt snap-back.",
+     cue:"Make each down-to-up gap feel wider than the up-to-down gap. Overdo it."}
+   ]},
+   {name:"TIER 2 · install the ghosts", items:[
+    {key:"6",bpm:60,click:"all8",barsPerStage:8,title:"Subtraction ladder (auto)",
+     why:"Advances itself A to D, 8 bars each. Never stop the arm.",
+     cue:"You are removing sound, not motion. The arc must not change between stages.",
+     stages:[{label:"A · all eight",pattern:P_ALL},
+             {label:"B · ghost the & of 1",pattern:[1,0,1,1,1,1,1,1]},
+             {label:"C · ghost beat 3",pattern:[1,1,1,1,0,1,1,1]},
+             {label:"D · D DU UDU",pattern:P_FULL}]},
+    {key:"7",bpm:60,click:"all8",pattern:P_FULL,playback:true,ghostAudible:true,title:"Loud ghosts",
+     why:"Ghosts play as soft brushes so you can hear them land in time.",
+     cue:"Let your ghosts lightly graze the muted strings. Match the soft ticks."},
+    {key:"8",bpm:55,click:"beats",pattern:P_FULL,emphasizeGhosts:true,title:"Say the ghosts",
+     why:"Count all eight out loud, shouting the two marked cells.",
+     cue:"Say 1 & 2 & 3 & 4 & aloud, LOUDER on the two red cells. Your voice can't fake it."}
+   ]},
+   {name:"TIER 3 · even out the burst", items:[
+    {key:"9",bpm:55,click:"all8",pattern:[0,0,0,0,0,1,1,1],title:"Burst isolation",
+     why:"Only the UDU, one click per stroke.",
+     cue:"Three clicks, three strokes. Nowhere for a burst to hide."},
+    {key:"0",bpm:55,click:"all8",pattern:[0,1,1,1,0,0,0,0],title:"Burst shifted early",
+     why:"Same UDU on the & of 1 — a positional diagnostic.",
+     cue:"If it stops compressing here, the fault is anticipation. If not, it's the motion itself."},
+    {key:"q",bpm:60,click:"burst",pattern:P_FULL,title:"Clicks on the UDU only",
+     why:"Full pattern, but the metronome marks only the three burst strokes.",
+     cue:"The first half is on you. The burst has to meet three clicks exactly."},
+    {key:"w",bpm:60,click:"beats",pattern:P_FULL,freeze:{at:"end"},title:"Freeze on the & of 4",
+     why:"Stops you every 4th bar right after the last upstroke.",
+     cue:"Hold the freeze. If you got there early, you'll feel the dead air."},
+    {key:"e",bpm:50,click:"beats",pattern:P_FULL,arc:1.0,title:"Oversized arc",
+     why:"Widens the target arc. A bigger swing is physically hard to rush.",
+     cue:"Exaggerate. Tape a mark on the body for the top and bottom of the swing."}
+   ]},
+   {name:"TIER 4 · take the ear away", items:[
+    {key:"r",bpm:50,click:"beats",pattern:P_FULL,title:"Half speed",
+     why:"Rushing hides at speed and cannot hide here.",
+     cue:"If you can't hold it at 50, you don't own it at 90."},
+    {key:"t",bpm:70,click:"24",pattern:P_FULL,title:"Click on 2 and 4",
+     why:"Less information. You keep the time yourself.",
+     cue:"Feel beats 1 and 3 without being told where they are."},
+    {key:"y",bpm:70,click:"one",pattern:P_FULL,title:"Beat 1 only",
+     why:"One click a bar. Rush the UDU and beat 1 arrives early.",
+     cue:"Listen for whether your beat 1 lands on the click or before it."},
+    {key:"u",bpm:70,click:"drop",pattern:P_FULL,title:"Dropout bars",
+     why:"Two bars with click, two without.",
+     cue:"Are you still there when it comes back?"},
+    {key:"i",bpm:50,click:"beats",pattern:P_FULL,ramp:{every:8,delta:2,max:80},title:"Tempo creep (auto)",
+     why:"Adds 2 bpm every 8 bars, 50 up to 80.",
+     cue:"Hold the arc as it speeds up. Stop the moment the burst compresses."}
+   ]}
+  ];
+  var DRILLS=[]; TIERS.forEach(function(t){ t.items.forEach(function(d){ DRILLS.push(d); }); });
+
+  return {COUNTS:COUNTS,P_ALL:P_ALL,P_NONE:P_NONE,P_FULL:P_FULL,CLICK_MODES:CLICK_MODES,
+    eighthDur:eighthDur,subDur:subDur,DIVISIONS:DIVISIONS,divisionOf:divisionOf,divOf:divOf,defaultPattern:defaultPattern,dirOf:dirOf,theta:theta,goingDown:goingDown,contactIndex:contactIndex,
+    handSide:handSide,wantsClick:wantsClick,layout:layout,MAX_ARC:MAX_ARC,REF_ARC:REF_ARC,bpmAtBar:bpmAtBar,stageAt:stageAt,patternAtBar:patternAtBar,
+    eventsForNote:eventsForNote,freezeSchedule:freezeSchedule,freezeInfo:freezeInfo,
+    timeOfNote:timeOfNote,simulate:simulate,analyze:analyze,validateDrill:validateDrill,
+    TIERS:TIERS,DRILLS:DRILLS};
+})();
+if(typeof module!=="undefined"&&module.exports) module.exports=ENGINE;
+/* ENGINE:END */
+
+/* ============================================================
+   UI + AUDIO — everything below drives the engine
+   ============================================================ */
+(function(){
+if(typeof document==="undefined") return;
+var $=function(id){return document.getElementById(id);};
+
+var division="8";
+var pattern=ENGINE.defaultPattern(division);
+var cfg=null, drill=null;
+
+/* ---------- audio ---------- */
+var ac=null,master=null,noise=null;
+function initAudio(){
+  if(ac) return;
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) return;
+  ac=new AC(); master=ac.createGain(); master.gain.value=.9; master.connect(ac.destination);
+  var len=Math.floor(ac.sampleRate*.3); noise=ac.createBuffer(1,len,ac.sampleRate);
+  var d=noise.getChannelData(0); for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
+}
+var CLICKS={accent:[1700,.42],beat:[1150,.30],sub:[880,.18],stop:[420,.5]};
+function click(t,kind){
+  if(!ac) return;
+  var c=CLICKS[kind]||CLICKS.sub, o=ac.createOscillator(), g=ac.createGain();
+  o.type=(kind==="stop"?"sawtooth":"square"); o.frequency.value=c[0];
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(c[1],t+.001);
+  g.gain.exponentialRampToValueAtTime(.0001,t+(kind==="stop"?.3:.055));
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+(kind==="stop"?.34:.08));
+}
+function strum(t,dir,vol){
+  if(!ac) return;
+  var s=ac.createBufferSource(); s.buffer=noise;
+  var f=ac.createBiquadFilter(); f.type="bandpass"; f.frequency.value=(dir==="d"?1000:2100); f.Q.value=1.1;
+  var g=ac.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.004);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.13);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+.16);
+}
+
+/* ---------- transport ---------- */
+var running=false,t0=0,nextN=0,tAcc=0,timer=null,freezes=[],freezeIdx=0,curE8=.42,curBar=-1;
+var LOOKAHEAD=.12,TICKMS=25;
+var bpmEl=$("bpm"),bpmOut=$("bpmOut"),playBtn=$("play"),clickSel=$("clickMode"),
+    strokeChk=$("strokeSnd"),ghostChk=$("ghostSnd"),countChk=$("countIn"),divSel=$("division"),
+    cueTitle=$("cueTitle"),cueText=$("cueText"),stageTag=$("stageTag"),
+    freezeBox=$("freeze"),freezeAns=$("freezeAns"),freezeCd=$("freezeCd");
+
+function buildCfg(){
+  return {bpm:+bpmEl.value, click:clickSel.value, pattern:pattern, div:division,
+    stages:(drill&&drill.stages)||null, barsPerStage:(drill&&drill.barsPerStage)||8,
+    playback:strokeChk.checked, ghostAudible:ghostChk.checked,
+    accentUps:!!(drill&&drill.accentUps), ramp:(drill&&drill.ramp)||null,
+    freeze:(drill&&drill.freeze)||null, countIn:countChk.checked};
+}
+function scheduleNote(n,t){
+  var ev=ENGINE.eventsForNote(n,cfg);
+  for(var k=0;k<ev.length;k++){
+    if(ev[k].type==="click") click(t,ev[k].kind); else strum(t,ev[k].dir,ev[k].gain);
+  }
+  if(cfg.freeze && freezeIdx<freezes.length && freezes[freezeIdx]===n+0.5) click(t+curE8*0.5,"stop");
+}
+function pump(){
+  if(!ac) return;
+  var cellsPerBar=ENGINE.divOf(cfg).cells;
+  while(t0+tAcc < ac.currentTime+LOOKAHEAD){
+    var bar=Math.floor(nextN/cellsPerBar);
+    curE8=ENGINE.subDur(ENGINE.bpmAtBar(bar,cfg),cfg.div);
+    scheduleNote(nextN,t0+tAcc);
+    tAcc+=curE8; nextN++;
+  }
+}
+function start(){
+  initAudio(); if(ac&&ac.resume) ac.resume();
+  cfg=buildCfg();
+  var cellsPerBar=ENGINE.divOf(cfg).cells;
+  curE8=ENGINE.subDur(cfg.bpm,cfg.div);
+  nextN=cfg.countIn?-cellsPerBar:0;
+  tAcc=ENGINE.timeOfNote(nextN,cfg);          /* negative during the count-in */
+  t0=(ac?ac.currentTime:0)+.18+(cfg.countIn?cellsPerBar*curE8:0);
+  freezes=cfg.freeze?ENGINE.freezeSchedule(Math.floor(Math.random()*1e9),40,cfg):[];
+  freezeIdx=0; curBar=-1;
+  taps.length=0; drawBars();
+  freezeBox.classList.remove("on");
+  running=true; playBtn.textContent="Stop"; playBtn.dataset.on="1";
+  timer=setInterval(pump,TICKMS); pump();
+}
+function stop(){
+  running=false; clearInterval(timer);
+  playBtn.textContent="Start"; playBtn.dataset.on="0";
+  cells.forEach(function(c){c.dataset.on="0";});
+}
+playBtn.onclick=function(){ this.blur(); running?stop():start(); };
+bpmEl.oninput=function(){ bpmOut.textContent=bpmEl.value; if(running){stop();start();} };
+clickSel.onchange=function(){ if(cfg) cfg.click=clickSel.value; };
+divSel.onchange=function(){
+  division=divSel.value; drill=null;
+  setPattern(ENGINE.defaultPattern(division),false);
+  gridEl.dataset.emph="0"; TMAX=.62;
+  cueTitle.textContent=ENGINE.divisionOf(division).label;
+  cueText.textContent="Free play. Tap cells to build a pattern, or load a drill.";
+  stageTag.textContent="";
+  if(running){ stop(); start(); }
+};
+strokeChk.onchange=ghostChk.onchange=function(){ if(cfg){cfg.playback=strokeChk.checked;cfg.ghostAudible=ghostChk.checked;} };
+
+/* ---------- grid ---------- */
+var gridEl=$("grid"),cells=[];
+function buildGrid(locked){
+  var D=ENGINE.divisionOf(division);
+  gridEl.innerHTML=""; gridEl.dataset.locked=locked?"1":"0";
+  gridEl.dataset.div=D.id; gridEl.style.setProperty("--cells",D.cells);
+  cells=pattern.map(function(v,i){
+    var c=document.createElement("button");
+    c.className="cell"; c.dataset.hit=v; c.dataset.dir=ENGINE.dirOf(i); c.dataset.on="0";
+    c.dataset.beatstart=(i%D.perBeat===0)?"1":"0";
+    c.innerHTML='<span class="cnt">'+D.counts[i]+'</span><span class="arw">'+(i%2===0?"↓":"↑")+'</span>';
+    c.setAttribute("aria-label",D.counts[i]+" "+(i%2===0?"down":"up")+" "+(v?"hit":"ghost"));
+    c.onclick=function(){
+      c.blur(); if(gridEl.dataset.locked==="1") return;
+      pattern[i]=pattern[i]?0:1; c.dataset.hit=pattern[i];
+    };
+    gridEl.appendChild(c); return c;
+  });
+}
+buildGrid(false);
+function setPattern(p,locked){ pattern.length=0; p.forEach(function(v){pattern.push(v);}); buildGrid(locked); }
+
+/* ---------- pendulum ---------- */
+var cv=$("pend"),g2=cv.getContext?cv.getContext("2d"):null,TMAX=.62,lastN=null,flashT=-9,flashDir="d",flashHit=true;
+function fit(){ if(!g2) return; var r=window.devicePixelRatio||1,w=cv.clientWidth||700,h=cv.clientHeight||250;
+  cv.width=w*r; cv.height=h*r; g2.setTransform(r,0,0,r,0,0); }
+window.addEventListener("resize",fit); fit();
+
+function currentE(){
+  if(!running||!ac) return null;
+  var el=ac.currentTime-t0;
+  if(!cfg.ramp||el<0) return el/ENGINE.subDur(cfg.bpm,cfg.div);
+  var n=0, acc=0, dur;
+  for(var g=0;g<8000;g++){
+    dur=ENGINE.subDur(ENGINE.bpmAtBar(Math.floor(n/ENGINE.divOf(cfg).cells),cfg),cfg.div);
+    if(acc+dur>el) return n+(el-acc)/dur;
+    acc+=dur; n++;
+  }
+  return n;
+}
+function draw(){
+  if(!g2){ return; }
+  var w=cv.clientWidth||700,h=cv.clientHeight||250;
+  g2.clearRect(0,0,w,h);
+  var cs=getComputedStyle(document.documentElement);
+  var BRASS=cs.getPropertyValue("--brass").trim()||"#d4a24c",
+      MINT=cs.getPropertyValue("--mint").trim()||"#6fd6bd",
+      MUTED=cs.getPropertyValue("--muted").trim()||"#7d938f",
+      RULE=cs.getPropertyValue("--rule").trim()||"#223438";
+  var lay=ENGINE.layout(w,h,TMAX), px=lay.px, py=lay.py, L=lay.L;
+  var e=currentE(), moving=(e!==null);
+  var th=moving?ENGINE.theta(e,TMAX):0, down=moving?ENGINE.goingDown(e):true;
+
+  if(moving){
+    var n=ENGINE.contactIndex(e), cpb=ENGINE.divOf(cfg).cells;
+    if(n!==lastN){
+      lastN=n;
+      if(n>=0){ flashT=ac.currentTime; flashDir=ENGINE.dirOf(n%cpb);
+        flashHit=!!ENGINE.patternAtBar(Math.floor(n/cpb),cfg)[n%cpb]; highlight(n%cpb); }
+      var bar=Math.floor(n/cpb);
+      if(n>=0&&bar!==curBar){ curBar=bar; onBar(bar); }
+    }
+    if(freezeIdx<freezes.length && e>=freezes[freezeIdx]) doFreeze(freezes[freezeIdx]);
+  } else lastN=null;
+
+  g2.strokeStyle=RULE; g2.lineWidth=1;
+  g2.beginPath(); g2.arc(px,py,L,-TMAX,TMAX); g2.stroke();
+  [-TMAX,TMAX].forEach(function(a){
+    g2.strokeStyle=a>0?BRASS:MINT; g2.globalAlpha=.55; g2.lineWidth=2;
+    g2.beginPath();
+    g2.moveTo(px+Math.cos(a)*(L-lay.bob),py+Math.sin(a)*(L-lay.bob));
+    g2.lineTo(px+Math.cos(a)*(L+lay.bob),py+Math.sin(a)*(L+lay.bob));
+    g2.stroke(); g2.globalAlpha=1;
+  });
+  var since=moving?ac.currentTime-flashT:9, glow=Math.max(0,1-since/.16);
+  g2.lineWidth=1;
+  for(var s=0;s<lay.strings;s++){
+    var y=py-lay.block/2+s*lay.gap; g2.strokeStyle=RULE;
+    if(glow>0){ g2.strokeStyle=(flashDir==="d"?BRASS:MINT); g2.globalAlpha=flashHit?glow:glow*.22; }
+    g2.beginPath(); g2.moveTo(lay.left,y); g2.lineTo(lay.right,y); g2.stroke(); g2.globalAlpha=1;
+  }
+  var bx=px+Math.cos(th)*L, by=py+Math.sin(th)*L;
+  g2.strokeStyle=RULE; g2.lineWidth=2; g2.beginPath(); g2.moveTo(px,py); g2.lineTo(bx,by); g2.stroke();
+  g2.fillStyle=MUTED; g2.beginPath(); g2.arc(px,py,4,0,7); g2.fill();
+  g2.fillStyle=down?BRASS:MINT; g2.beginPath(); g2.arc(bx,by,lay.bob,0,7); g2.fill();
+  g2.font='500 11px "Space Grotesk",sans-serif'; g2.textAlign="left";
+  g2.fillStyle=MINT;  g2.fillText("UP",px+4,py-lay.reach*.72);
+  g2.fillStyle=BRASS; g2.fillText("DOWN",px+4,py+lay.reach*.80);
+  g2.fillStyle=MUTED; g2.textAlign="right"; g2.font='400 11px "JetBrains Mono",monospace';
+  g2.fillText(moving?(e<0?"count in":"bar "+(Math.floor(e/ENGINE.divOf(cfg).cells)+1)):"press start",w-6,16);
+  requestAnimationFrame(draw);
+}
+function highlight(i){ cells.forEach(function(c,k){ c.dataset.on=(k===i?"1":"0"); }); }
+if(g2) draw();
+
+/* ---------- per-bar behaviours: ladder stages + tempo ramp ---------- */
+function onBar(bar){
+  if(cfg.stages){
+    var st=ENGINE.stageAt(bar,cfg);
+    stageTag.textContent=st.label;
+    if(!samePattern(pattern,st.pattern)) setPattern(st.pattern,true);
+  }
+  if(cfg.ramp){
+    var b=ENGINE.bpmAtBar(bar,cfg);
+    bpmOut.textContent=b; stageTag.textContent=b+" bpm";
+  }
+}
+function samePattern(a,b){ return a.length===b.length&&a.every(function(v,i){return v===b[i];}); }
+
+/* ---------- freeze ---------- */
+function doFreeze(e){
+  freezeIdx++;
+  var info=ENGINE.freezeInfo(e,cfg.div);
+  stop();
+  freezeAns.textContent=info.text;
+  freezeBox.classList.add("on");
+  var left=3;
+  freezeCd.textContent="resuming in "+left;
+  var iv=setInterval(function(){
+    left--; freezeCd.textContent = left>0 ? "resuming in "+left : "";
+    if(left<=0){ clearInterval(iv); freezeBox.classList.remove("on"); start(); }
+  },1000);
+}
+
+/* ---------- compression test ---------- */
+var taps=[],barsEl=$("bars"),verdictEl=$("verdict");
+function tap(){
+  if(!running||!ac) return;
+  var t=ac.currentTime; if(t<t0) return;       /* ignore the count-in */
+  taps.push(t); if(taps.length>13) taps.shift();
+  drawBars();
+}
+$("tapPad").onclick=function(){ this.blur(); tap(); };
+$("clearTaps").onclick=function(){ this.blur(); taps.length=0; drawBars(); };
+function drawBars(){
+  var a=ENGINE.analyze(taps,curE8);
+  if(!a.rows.length){ barsEl.innerHTML=""; verdictEl.textContent="No taps yet."; return; }
+  var cs=getComputedStyle(document.documentElement);
+  var OK=cs.getPropertyValue("--mint").trim()||"#6fd6bd", BAD=cs.getPropertyValue("--warn").trim()||"#e2705c";
+  barsEl.innerHTML=a.rows.map(function(r,i){
+    var p=Math.max(60,Math.min(140,r.pct)), off=(p-100)/80;
+    var left=(off<0?50+off*100:50), wd=Math.abs(off)*100;
+    var col=Math.abs(r.pct-100)>8?BAD:OK;
+    return '<div class="bar"><span style="color:var(--muted)">gap '+(i+1)+'</span>'+
+      '<span class="track"><i></i><b style="left:'+left+'%;width:'+Math.max(wd,1.2)+'%;background:'+col+'"></b></span>'+
+      '<span style="color:'+col+'">'+r.pct.toFixed(0)+'%</span></div>';
+  }).join("");
+  if(a.drift===null){ verdictEl.textContent="Keep tapping."; return; }
+  verdictEl.innerHTML='Start of bar <strong>'+a.early.toFixed(0)+'%</strong> · end of bar <strong>'+a.late.toFixed(0)+
+    '%</strong> · '+(a.verdict==="compressing"?'<span style="color:var(--warn)">compressing by '+Math.abs(a.drift).toFixed(0)+'%</span>'
+    :a.verdict==="slowing"?'slowing by '+a.drift.toFixed(0)+'%':'<span style="color:var(--mint)">even</span>');
+}
+
+/* ---------- mirror ---------- */
+$("mirror").onchange=function(ev){
+  var wrap=$("mirrorWrap"),el=ev.target;
+  if(el.checked){
+    if(!navigator.mediaDevices){ el.checked=false; return; }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}}).then(function(s){
+      $("cam").srcObject=s; $("cam").play(); wrap.classList.add("on");
+    }).catch(function(){ el.checked=false; alert("Camera unavailable. Mirror needs an https page — it works once this is on GitHub Pages."); });
+  }else{
+    var s=$("cam").srcObject; if(s) s.getTracks().forEach(function(t){t.stop();});
+    wrap.classList.remove("on");
+  }
+};
+
+/* ---------- drills ---------- */
+var host=$("drillHost"),byKey={};
+function loadDrill(d){
+  drill=d;
+  division=String(d.div||"8"); divSel.value=division;
+  setPattern(d.stages?d.stages[0].pattern:d.pattern, !!d.stages);
+  bpmEl.value=d.bpm; bpmOut.textContent=d.bpm;
+  clickSel.value=d.click;
+  strokeChk.checked=!!d.playback; ghostChk.checked=!!d.ghostAudible;
+  TMAX=d.arc||.62;
+  gridEl.dataset.emph=d.emphasizeGhosts?"1":"0";
+  cueTitle.textContent=d.title; cueText.textContent=d.cue;
+  stageTag.textContent=d.stages?d.stages[0].label:(d.ramp?d.bpm+" bpm":"");
+  freezeBox.classList.remove("on");
+  if(running) stop();
+  start();
+}
+ENGINE.TIERS.forEach(function(tier){
+  var h=document.createElement("div"); h.className="tier"; h.textContent=tier.name; host.appendChild(h);
+  var g=document.createElement("div"); g.className="drills";
+  tier.items.forEach(function(d){
+    byKey[d.key]=d;
+    var b=document.createElement("button"); b.className="drill"; b.dataset.key=d.key;
+    b.innerHTML='<span class="n"><span class="kbd">'+d.key+'</span>'+d.bpm+' bpm</span>'+
+      '<span class="t">'+d.title+'</span><span class="w">'+d.why+'</span>';
+    b.onclick=function(){ b.blur(); loadDrill(d); document.querySelector(".stage").scrollIntoView({behavior:"smooth",block:"start"}); };
+    g.appendChild(b);
+  });
+  host.appendChild(g);
+});
+window.addEventListener("keydown",function(ev){
+  if(ev.metaKey||ev.ctrlKey||ev.altKey) return;
+  var tag=(ev.target&&ev.target.tagName)||"";
+  if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA") return;
+  if(ev.code==="Space"){ ev.preventDefault(); tap(); return; }
+  var k=(ev.key||"").toLowerCase();
+  if(byKey[k]){ ev.preventDefault(); loadDrill(byKey[k]); }
+});
+
+/* exposed for tests */
+window.__APP={ get pattern(){return pattern;}, get cfg(){return cfg;}, get drill(){return drill;},
+  get running(){return running;}, get taps(){return taps;}, get freezes(){return freezes;},
+  get TMAX(){return TMAX;}, get division(){return division;}, get t0(){return t0;}, get curE8(){return curE8;}, get nextN(){return nextN;},
+  loadDrill:loadDrill, start:start, stop:stop, tap:tap, onBar:onBar, pump:pump,
+  doFreeze:doFreeze, buildCfg:buildCfg, setPattern:setPattern, cells:function(){return cells;} };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "pendulum-strumming-trainer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strumming pendulum trainer — single-page, no build step",
+  "scripts": { "test": "node test/engine.test.js && node test/dom.test.js" },
+  "devDependencies": { "jsdom": "^24.0.0" }
+}
